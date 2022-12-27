@@ -65,7 +65,7 @@ type Config struct {
 	AsyncConnect  bool `json:"async_connect"`
 	MarshalAsJSON bool `json:"marshal_as_json"`
 	//Skips loggertag and timestamp from logging
-	MarshalAsRawMsg bool `json:"marshal_as_rawmsg"`
+	MarshalAsRawJSON bool `json:"marshal_as_rawjson"`
 
 	// AsyncReconnectInterval defines the interval (ms) at which the connection
 	// to the fluentd-address is re-established. This option is useful if the address
@@ -359,7 +359,7 @@ func (f *Fluent) EncodeData(tag string, tm time.Time, message interface{}) (msg 
 		m := Message{Tag: tag, Time: timeUnix, Record: message, Option: option}
 		chunk := &MessageChunk{message: m}
 		msg.data, err = json.Marshal(chunk)
-	} else if f.Config.MarshalAsRawMsg {
+	} else if f.Config.MarshalAsRawJSON {
 		msg.data, err = json.Marshal(message)
 	} else if f.Config.SubSecondPrecision {
 		m := &MessageExt{Tag: tag, Time: EventTime(tm), Record: message, Option: option}
@@ -621,7 +621,7 @@ func (f *Fluent) write(ctx context.Context, msg *msgToSend) (bool, error) {
 	if msg.ack != "" {
 		resp := &AckResp{}
 		var err error
-		if f.Config.MarshalAsJSON {
+		if f.Config.MarshalAsJSON || f.Config.MarshalAsRawJSON {
 			dec := json.NewDecoder(f.conn)
 			err = dec.Decode(resp)
 		} else {
